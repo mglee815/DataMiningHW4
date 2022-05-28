@@ -1,9 +1,11 @@
 import argparse
+import numpy
 import torch
 import torchvision.datasets as dsets
 import torchvision.transforms as transforms
 import random
 import matplotlib.pyplot as plt
+from yaml import parse
 
 #Using GPU
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -29,14 +31,16 @@ mnist_test = dsets.MNIST(root='MNIST_data/',
 
 #Set parameter
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--Question', type = int)
-# parser.add_argument('--lr', type = int)
+parser = argparse.ArgumentParser()
+parser.add_argument('--Question', type = int)
+parser.add_argument('--lr', type = float, default = 0.001)
 
-Question = int(input("Which Question you want to solve? (1~6)"))
-training_epochs = 10
+args = parser.parse_args()
+
+Question = args.Question
+training_epochs = 50
 batch_size = 32
-learning_rate  = 0.001
+learning_rate  = args.lr
 
 error = torch.nn.CrossEntropyLoss().to(device)
 sigmoid = torch.nn.Sigmoid().to(device)
@@ -48,8 +52,6 @@ data_loader = torch.utils.data.DataLoader(dataset=mnist_train,
  
 
 if Question == 1:
-    lr = float(input("Set learning rate (0.001 or 0.1)"))
-    learning_rate  = lr
     linear1 = torch.nn.Linear(784, 10, bias=True)
 
     torch.nn.init.xavier_uniform_(linear1.weight)
@@ -119,8 +121,11 @@ total_batch = len(data_loader)
 model.train()    # set the model to train mode (dropout=True)
 
 cost_log = []
+acc_log = []
+
 X_test = mnist_test.test_data.view(-1, 28 * 28).float().to(device)
 Y_test = mnist_test.test_labels.to(device)
+
 for epoch in range(training_epochs):
     avg_cost = 0
 
@@ -143,6 +148,23 @@ for epoch in range(training_epochs):
 
     print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(avg_cost), 'Accuracy = ' , '{:.5f}'.format(accuracy))
     cost_log.append(float(avg_cost.cpu()))
+    acc_log.append(accuracy)
+    change = abs(numpy.mean(acc_log[-6:-1]) - numpy.float(accuracy))
+    print(change)
+    if change < 0.0001:
+        print("Early Stop")
+        break
+
+    with torch.no_grad():
+        model.eval()    # set the model to evaluation mode (dropout=False)
+
+        # Test the model using test sets
+        prediction = model(X_test)
+        correct_prediction = torch.argmax(prediction, 1) == Y_test
+        accuracy = correct_prediction.float().mean()
+        print('Test Data Accuracy:', accuracy.item())
+
+
 print('Learning finished')
 
 
@@ -157,6 +179,6 @@ with torch.no_grad():
 
 plt.plot(cost_log)
 plt.title(f"Loss of Question {Question} with {learning_rate}lr")
-plt.savefig(f"../plot/{Question}_{learning_rate}_log.png")
+plt.savefig(f"/home/mglee/VSCODE/git_folder/DataMiningHW4/plot/{Question}_{learning_rate}_log.png")
 
 
