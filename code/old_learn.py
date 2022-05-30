@@ -6,7 +6,6 @@ import torchvision.transforms as transforms
 import random
 import matplotlib.pyplot as plt
 from yaml import parse
-import pandas as pd
 
 #Using GPU
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -53,98 +52,66 @@ data_loader = torch.utils.data.DataLoader(dataset=mnist_train,
  
 
 if Question == 1:
-    
-    class mnist_model(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear1 = torch.nn.Linear(784, 10, bias=True).cuda()
-            self.sigmoid = torch.nn.Sigmoid().cuda()
-            torch.nn.init.xavier_uniform_(self.linear1.weight)
-  
-        def forward(self, x, flag = False):
-            x = self.linear1(x)
-            return x
+    linear1 = torch.nn.Linear(784, 10, bias=True)
 
-    model = mnist_model() 
+    torch.nn.init.xavier_uniform_(linear1.weight)
+
+    model = torch.nn.Sequential(linear1).cuda()
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 elif Question == 2:
-    
-    class mnist_model(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear1 = torch.nn.Linear(784, 128, bias=True).cuda()
-            self.linear2 = torch.nn.Linear(128, 10, bias=True).cuda()
-            self.sigmoid = torch.nn.Sigmoid().cuda()
-            torch.nn.init.xavier_uniform_(self.linear1.weight)
-            torch.nn.init.xavier_uniform_(self.linear2.weight)
-            
-        def forward(self, x, flag = False):
-            x = self.linear1(x)
-            x = self.sigmoid(x)
-            x = self.linear2(x)
-            return x
+    linear1 = torch.nn.Linear(784, 128, bias=True)
+    linear2 = torch.nn.Linear(128, 10, bias=True)
 
-    model = mnist_model() 
+    torch.nn.init.xavier_uniform_(linear1.weight)
+    torch.nn.init.xavier_uniform_(linear2.weight)
+
+    model = torch.nn.Sequential(
+        linear1, sigmoid,
+        linear2
+    ).cuda()
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 
 elif Question == 3 or Question == 4:
-    
-    class mnist_model(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear1 = torch.nn.Linear(784, 128, bias=True).cuda()
-            self.linear2 = torch.nn.Linear(128, 4, bias=True).cuda()
-            self.linear3 = torch.nn.Linear(4, 10, bias=True).cuda()    
-            self.sigmoid = torch.nn.Sigmoid().cuda()
-            torch.nn.init.xavier_uniform_(self.linear1.weight)
-            torch.nn.init.xavier_uniform_(self.linear2.weight)
-            torch.nn.init.xavier_uniform_(self.linear3.weight)
-            
-            
-        def forward(self, x, flag = False):
-            x = self.linear1(x)
-            x = self.sigmoid(x)
-            x = self.linear2(x)
-            hidden_out = self.sigmoid(x)
-            x = self.linear3(hidden_out)
-            if flag:
-                return x, hidden_out
-            return x
+    print(Question)
+    linear1 = torch.nn.Linear(784, 128, bias=True)
+    linear2 = torch.nn.Linear(128, 4, bias=True)
+    linear3 = torch.nn.Linear(4, 10, bias=True)
 
-    model = mnist_model() 
+    torch.nn.init.xavier_uniform_(linear1.weight)
+    torch.nn.init.xavier_uniform_(linear2.weight)
+    torch.nn.init.xavier_uniform_(linear3.weight)
+
+    model = torch.nn.Sequential(
+        linear1, sigmoid,
+        linear2, sigmoid,
+        linear3
+    ).cuda()
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 
 elif Question == 5 or Question == 6:
-    
-    class mnist_model(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear1 = torch.nn.Linear(784, 128, bias=True).cuda()
-            self.linear2 = torch.nn.Linear(128, 2, bias=True).cuda()
-            self.linear3 = torch.nn.Linear(2, 10, bias=True).cuda()    
-            self.sigmoid = torch.nn.Sigmoid().cuda()
-            torch.nn.init.xavier_uniform_(self.linear1.weight)
-            torch.nn.init.xavier_uniform_(self.linear2.weight)
-            torch.nn.init.xavier_uniform_(self.linear3.weight)
-            
-            
-        def forward(self, x, flag = False):
-            x = self.linear1(x)
-            x = self.sigmoid(x)
-            x = self.linear2(x)
-            hidden_out = self.sigmoid(x)
-            x = self.linear3(hidden_out)
-            if flag:
-                return x, hidden_out
-            return x
+    print(Question)
+    linear1 = torch.nn.Linear(784, 128, bias=True)
+    linear2 = torch.nn.Linear(128, 2, bias=True)
+    linear3 = torch.nn.Linear(2, 10, bias=True)
 
-    model = mnist_model() 
+    torch.nn.init.xavier_uniform_(linear1.weight)
+    torch.nn.init.xavier_uniform_(linear2.weight)
+    torch.nn.init.xavier_uniform_(linear3.weight)
+
+    model = torch.nn.Sequential(
+        linear1, sigmoid,
+        linear2, sigmoid,
+        linear3
+    ).cuda()
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-
+    
 
 
 
@@ -207,13 +174,13 @@ with torch.no_grad():
     model.eval()    # set the model to evaluation mode (dropout=False)
 
     # Test the model using test sets
-    prediction, hidden_out = model(X_test, flag = True)
+    prediction = model(X_test)
     correct_prediction = torch.argmax(prediction, 1) == Y_test
     accuracy = correct_prediction.float().mean()
     print('Test Data Accuracy:', accuracy.item())
 
-plt.plot(acc_log, label = 'train accuracy')
-plt.plot(test_acc_log, label = 'test accuracy')
+plt.plot(acc_log)
+plt.plot(test_acc_log)
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.legend()
@@ -222,7 +189,3 @@ plt.savefig(f"/home/mglee/VSCODE/git_folder/DataMiningHW4/plot/{Question}_{learn
 print(f"Save figure as {Question}_{learning_rate}_log.png")
 
 
-if Question == 4 or Question == 6:
-    df = pd.DataFrame(hidden_out.cpu())
-    df['label'] = Y_test.cpu()
-    print(f" average of hidden layer by class {df.groupby('label').mean()}")
