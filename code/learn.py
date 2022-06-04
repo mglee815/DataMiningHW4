@@ -261,7 +261,7 @@ plt.title(f"Loss of Question {Question} with {learning_rate}lr")
 plt.savefig(f"/home/mglee/VSCODE/git_folder/DataMiningHW4/plot/{Question}_{learning_rate}_loss.png")
 print(f"Save figure as {Question}_{learning_rate}_loss.png")
 
-#
+#optional task
 if Question == 4:
     df = pd.DataFrame(hidden_out.cpu())
     df['label'] = Y_test.cpu()
