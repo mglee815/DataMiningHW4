@@ -209,7 +209,7 @@ for epoch in range(training_epochs):
     acc_log.append(accuracy)
     
     # compare with five recent accuracy, There is no meaningful change -> early stop
-    if abs(numpy.mean(acc_log[-6:-1]) - numpy.float(accuracy)) < 0.00005:
+    if abs(numpy.mean(acc_log[-6:-1]) - numpy.float(accuracy)) < 0.00001:
         print("Early Stop")
         break
     #for test data, get accuracy with current model
@@ -242,16 +242,24 @@ with torch.no_grad():
 
 
 #Save plot of changing accuracy
-plt.plot(acc_log, label = 'train accuracy')
-plt.plot(test_acc_log, label = 'test accuracy')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.ylim(0.3, 1.1)
-plt.legend()
-plt.title(f"Accuracy of Question {Question} with {learning_rate}lr")
-plt.savefig(f"/home/mglee/VSCODE/git_folder/DataMiningHW4/plot/{Question}_{learning_rate}_log.png")
-print(f"Save figure as {Question}_{learning_rate}_log.png")
+# plt.plot(acc_log, label = 'train accuracy')
+# plt.plot(test_acc_log, label = 'test accuracy')
+# plt.xlabel('Epoch')
+# plt.ylabel('Accuracy')
+# plt.ylim(0.3, 1.1)
+# plt.legend()
+# plt.title(f"Accuracy of Question {Question} with {learning_rate}lr")
+# plt.savefig(f"/home/mglee/VSCODE/git_folder/DataMiningHW4/plot/{Question}_{learning_rate}_log.png")
+# print(f"Save figure as {Question}_{learning_rate}_log.png")
 
+#Save plot of changing loss
+plt.plot(cost_log, label = 'Loss ')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.title(f"Loss of Question {Question} with {learning_rate}lr")
+plt.savefig(f"/home/mglee/VSCODE/git_folder/DataMiningHW4/plot/{Question}_{learning_rate}_loss.png")
+print(f"Save figure as {Question}_{learning_rate}_loss.png")
 
 #
 if Question == 4:
@@ -261,9 +269,11 @@ if Question == 4:
         {df.groupby('label').mean()}")
 
 if Question == 6:
-    plt.scatter(hidden_out.cpu())
-    plt.xlabel('x1')
-    plt.ylabel('x2')
-    plt.title('result of hidden-output')
+    df = pd.DataFrame(hidden_out.cpu())
+    df.columns = ['X1', 'X2']
+    df['label'] = Y_test.cpu()
+    fig, ax = plt.subplots()
+    for name, group in df.groupby('label'):
+        ax.plot(group.X1, group.X2, marker='o', linestyle='', label=name)
     plt.savefig(f"/home/mglee/VSCODE/git_folder/DataMiningHW4/plot/{Question}_hidden_output.png")
-    print(f"Save figure as {Question}_hidden_output.pngs")
+    print(f"Save figure as {Question}_hidden_output.png")
